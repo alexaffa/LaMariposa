@@ -1,0 +1,8 @@
+<autofill xmlns:android="http://schemas.android.com/apk/res/android">
+    <password>
+        <hint android:hint="clave" />
+    </password>
+    <username>
+        <hint android:hint="login" />
+    </username>
+</autofill>
