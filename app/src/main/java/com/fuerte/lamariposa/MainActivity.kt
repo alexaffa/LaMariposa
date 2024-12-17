@@ -4,6 +4,7 @@ import com.fuerte.lamariposa.ui.theme.LamariposaTheme
 import android.Manifest
 import android.app.Activity
 import android.app.DownloadManager
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -83,24 +84,32 @@ fun WebViewComponent() {
                 return if (url.endsWith(".pdf") || url.endsWith(".doc") || url.endsWith(".docx") ||
                     url.endsWith(".ods") || url.endsWith(".xlsx") || url.endsWith(".xls")) {
                     // Descargar o abrir archivo en una app externa según el tipo
-                    val intent = Intent(Intent.ACTION_VIEW)
-                    val mimeType = when {
-                        url.endsWith(".pdf") -> "application/pdf"
-                        url.endsWith(".doc") -> "application/msword"
-                        url.endsWith(".docx") -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                        url.endsWith(".ods") -> "application/vnd.oasis.opendocument.spreadsheet"
-                        url.endsWith(".xlsx") -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                        url.endsWith(".xls") -> "application/vnd.ms-excel"
-                        else -> "*/*"
+                    val intent = Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(Uri.parse(url), when {
+                            url.endsWith(".pdf") -> "application/pdf"
+                            url.endsWith(".doc") -> "application/msword"
+                            url.endsWith(".docx") -> "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                            url.endsWith(".ods") -> "application/vnd.oasis.opendocument.spreadsheet"
+                            url.endsWith(".xlsx") -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                            url.endsWith(".xls") -> "application/vnd.ms-excel"
+                            else -> "*/*"
+                        })
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     }
 
+
                     // Configurar el Intent para abrir el archivo con la app externa
-                    intent.setDataAndType(Uri.parse(url), mimeType)
+                    //intent.setDataAndType(Uri.parse(url), mimeType)
                     intent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
 
                     try {
                         context.startActivity(intent)
                     } catch (e: Exception) {
+                        try {
+                            context.startActivity(Intent.createChooser(intent, "Selecciona una aplicación"))
+                        } catch (e: ActivityNotFoundException) {
+                            Toast.makeText(context, "No hay aplicaciones disponibles para abrir este archivo.", Toast.LENGTH_SHORT).show()
+                        }
                         e.printStackTrace() // Maneja el error si no hay apps compatibles
                     }
                     true // Indica que la navegación ha sido manejada
