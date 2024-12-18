@@ -82,7 +82,7 @@ fun WebViewComponent() {
             ): Boolean {
                 val url = request?.url.toString()
                 return if (url.endsWith(".pdf") || url.endsWith(".doc") || url.endsWith(".docx") ||
-                    url.endsWith(".ods") || url.endsWith(".xlsx") || url.endsWith(".xls")) {
+                    url.endsWith(".ods") || url.endsWith(".xlsx") || url.endsWith(".xls")|| url.endsWith(".apk")) {
 
                     val intent = Intent(Intent.ACTION_VIEW).apply {
                         setDataAndType(Uri.parse(url), when {
@@ -92,6 +92,7 @@ fun WebViewComponent() {
                             url.endsWith(".ods") -> "application/vnd.oasis.opendocument.spreadsheet"
                             url.endsWith(".xlsx") -> "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                             url.endsWith(".xls") -> "application/vnd.ms-excel"
+                            url.endsWith(".apk") -> "application/vnd.android.package-archive"
                             else -> "*/*"
                         })
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
@@ -201,7 +202,7 @@ fun WebViewComponent() {
             downloadManager.enqueue(request)
         }
 
-        loadUrl("https://www.cajondesastre.com.es/mariposa/app1/base.php")
+        loadUrl("https://www.cajondesastre.com.es/mariposa/app1/base.php?version=20241218\"")
     }
 
     AndroidView(factory = { webView })
