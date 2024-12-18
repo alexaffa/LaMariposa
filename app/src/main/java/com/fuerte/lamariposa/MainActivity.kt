@@ -83,7 +83,7 @@ fun WebViewComponent() {
                 val url = request?.url.toString()
                 return if (url.endsWith(".pdf") || url.endsWith(".doc") || url.endsWith(".docx") ||
                     url.endsWith(".ods") || url.endsWith(".xlsx") || url.endsWith(".xls")) {
-                    // Descargar o abrir archivo en una app externa según el tipo
+
                     val intent = Intent(Intent.ACTION_VIEW).apply {
                         setDataAndType(Uri.parse(url), when {
                             url.endsWith(".pdf") -> "application/pdf"
@@ -97,48 +97,39 @@ fun WebViewComponent() {
                         flags = Intent.FLAG_ACTIVITY_NEW_TASK
                     }
 
-
-                    // Configurar el Intent para abrir el archivo con la app externa
-                    //intent.setDataAndType(Uri.parse(url), mimeType)
-                    intent.flags = Intent.FLAG_ACTIVITY_NO_HISTORY
-
                     try {
-                        context.startActivity(intent)
+                        view?.context?.startActivity(intent)
+                    } catch (e: ActivityNotFoundException) {
+                        // Si no hay apps compatibles, descargar el archivo
+                        Toast.makeText(view?.context, "Descargando...", Toast.LENGTH_SHORT).show()
+                        downloadFile(view?.context, url)
                     } catch (e: Exception) {
-                        try {
-                            context.startActivity(Intent.createChooser(intent, "Selecciona una aplicación"))
-                        } catch (e: ActivityNotFoundException) {
-                            Toast.makeText(context, "No hay aplicaciones disponibles para abrir este archivo.", Toast.LENGTH_SHORT).show()
-                        }
-                        e.printStackTrace() // Maneja el error si no hay apps compatibles
+                        e.printStackTrace()
+                        Toast.makeText(view?.context, "Ocurrió un error al abrir el archivo.", Toast.LENGTH_SHORT).show()
                     }
-                    true // Indica que la navegación ha sido manejada
-
-                }else if (url.startsWith("mailto:")) {
+                    true
+                } else if (url.startsWith("mailto:")) {
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
                         data = Uri.parse(url)
                     }
 
                     try {
-                        // Intent.createChooser para permitir selección de app de correo si es necesario
                         val chooser = Intent.createChooser(intent, "Enviar correo con...")
                         if (view?.context?.packageManager?.let { chooser.resolveActivity(it) } != null) {
                             view?.context?.startActivity(chooser)
                         } else {
-                            // Opcional: Mensaje si no hay apps de correo disponibles
                             Toast.makeText(view?.context, "No se encontró aplicación de correo", Toast.LENGTH_SHORT).show()
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace() // Maneja el error si algo sale mal al abrir el correo
+                        e.printStackTrace()
                         Toast.makeText(view?.context, "No se pudo abrir la aplicación de correo", Toast.LENGTH_SHORT).show()
                     }
                     true
-                }else if (url.startsWith("tel:")) {
+                } else if (url.startsWith("tel:")) {
                     val intent = Intent(Intent.ACTION_DIAL, Uri.parse(url))
                     view?.context?.startActivity(intent)
                     true
                 } else if (url.startsWith("https://www.cajondesastre.com.es")) {
-                    // Verifica si la URL es HTTP antes de cargarla
                     if (url.startsWith("https")) {
                         view?.loadUrl(url)
                         true
@@ -158,10 +149,27 @@ fun WebViewComponent() {
                 handler: SslErrorHandler?,
                 error: SslError?
             ) {
-                // Mostrar un mensaje o manejar el error SSL aquí si es necesario
                 handler?.proceed() // Solo si confías en el sitio
             }
+
+            private fun downloadFile(context: Context?, url: String) {
+                try {
+                    val downloadManager = context?.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
+                    val uri = Uri.parse(url)
+                    val request = DownloadManager.Request(uri).apply {
+                        setTitle("Descargando archivo")
+                        setDescription("El archivo se está descargando...")
+                        setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                        setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, uri.lastPathSegment)
+                    }
+                    downloadManager?.enqueue(request)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(context, "Ocurrió un error al descargar el archivo.", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
+
 
         setDownloadListener { url, _, _, _, _ ->
             if (ContextCompat.checkSelfPermission(
