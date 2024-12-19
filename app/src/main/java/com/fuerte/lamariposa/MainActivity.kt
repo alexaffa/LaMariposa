@@ -158,7 +158,7 @@ fun WebViewComponent() {
                     val downloadManager = context?.getSystemService(Context.DOWNLOAD_SERVICE) as? DownloadManager
                     val uri = Uri.parse(url)
                     val request = DownloadManager.Request(uri).apply {
-                        setTitle("Descargando archivo")
+                        setTitle(Uri.parse(url).lastPathSegment)
                         setDescription("El archivo se está descargando...")
                         setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                         setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, uri.lastPathSegment)
@@ -170,7 +170,6 @@ fun WebViewComponent() {
                 }
             }
         }
-
 
         setDownloadListener { url, _, _, _, _ ->
             if (ContextCompat.checkSelfPermission(
@@ -202,7 +201,7 @@ fun WebViewComponent() {
             downloadManager.enqueue(request)
         }
 
-        loadUrl("https://www.cajondesastre.com.es/mariposa/app1/base.php?version=20241218\"")
+        loadUrl("https://www.cajondesastre.com.es/mariposa/app1/base.php?version=20241218")
     }
 
     AndroidView(factory = { webView })
