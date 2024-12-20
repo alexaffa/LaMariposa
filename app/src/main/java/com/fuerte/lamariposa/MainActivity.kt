@@ -61,11 +61,19 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun WebViewComponent() {
     val context = LocalContext.current
+    val app  = "app1"
     webView = WebView(context).apply {
         layoutParams = ViewGroup.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.MATCH_PARENT
         )
+
+        // Configurar las cookies
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.setAcceptCookie(true)
+
+        // Establecer la cookie de versión
+        cookieManager.setCookie("https://www.cajondesastre.com.es/mariposa/"+app, "version=20241219; path=/")
 
         val webSettings: WebSettings = settings
         webSettings.javaScriptEnabled = true
@@ -201,7 +209,7 @@ fun WebViewComponent() {
             downloadManager.enqueue(request)
         }
 
-        loadUrl("https://www.cajondesastre.com.es/mariposa/app1/base.php?version=20241218")
+        loadUrl("https://www.cajondesastre.com.es/mariposa/"+app+"/base.php")
     }
 
     AndroidView(factory = { webView })
